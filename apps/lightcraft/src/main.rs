@@ -1006,3 +1006,8 @@ mod tests {
         let _ = std::fs::remove_dir_all(&d);
     }
 }
+
+// PersonalUpdates: native Wayland file drops come from the patched winit (root Cargo.toml);
+// this fails the build if the patch ever stops applying.
+#[cfg(target_os = "linux")]
+const _: bool = winit::platform::wayland::FILE_DROPS;

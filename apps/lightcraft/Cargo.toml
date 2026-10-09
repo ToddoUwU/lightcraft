@@ -37,3 +37,7 @@ rfd = { workspace = true }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 muda = { workspace = true }
+
+# PersonalUpdates: checks the patched winit with native Wayland file drops is in use (main.rs).
+[target.'cfg(target_os = "linux")'.dependencies]
+winit = { version = "0.30", default-features = false, features = ["wayland"] }
