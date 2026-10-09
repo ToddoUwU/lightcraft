@@ -75,6 +75,27 @@ fn mcp_over_stdio_sets_exposure_and_renders() {
     assert!(b > a + 10.0, "{a} → {b}");
 }
 
+/// An empty startup folder (`mcp ~/Pictures/shoot` before any photos land there) still serves;
+/// it used to exit with "invalid parameters for `library.import`: no paths".
+#[test]
+fn mcp_with_an_empty_folder_still_serves() {
+    let dir = tmp("empty-shoot");
+    std::fs::create_dir_all(&dir).unwrap();
+    let mut child =
+        Command::new(BIN).args(["mcp", dir.to_str().unwrap()]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::null()).spawn().unwrap();
+    let mut stdin = child.stdin.take().unwrap();
+    let mut stdout = BufReader::new(child.stdout.take().unwrap());
+    let init = json!({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "cli-test", "version": "0"}}});
+    writeln!(stdin, "{init}").unwrap();
+    stdin.flush().unwrap();
+    let mut line = String::new();
+    stdout.read_line(&mut line).unwrap();
+    let v: Value = serde_json::from_str(&line).unwrap();
+    assert_eq!(v["result"]["protocolVersion"], "2025-06-18", "{line}");
+    drop(stdin);
+    assert!(child.wait().unwrap().success());
+}
+
 #[test]
 fn render_subcommand() {
     let input = tmp("r-in.png");
